@@ -26,6 +26,16 @@ class Wheres extends Filter
             return;
         }
 
+        if(is_string($wheres)) {
+            if(json_validate($wheres)) {
+                $wheres = [json_decode($wheres, true)];
+            } else {
+                $wheres = [(array) $wheres];
+            }
+        }
+
+        error_log(response()->json($wheres));
+
         foreach ($wheres as $where) {
             $column = $where['column'] ?? null;
             $operator = $where['operator'] ?? null;

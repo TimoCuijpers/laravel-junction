@@ -71,6 +71,14 @@ trait HasIndex
         $accessors = request()?->getAccessors();
         $relations = request()?->getRelations();
 
+        if( is_string($accessors)) {
+            $accessors = [$accessors];
+        }
+
+        if( is_string($relations)) {
+            $relations = [$relations];
+        }
+
         return $this->resource::items(
             $items,
             pluckAttributes: $pluckFields !== null ? Arr::undot(array_flip($pluckFields)) : null,

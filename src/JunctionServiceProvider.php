@@ -80,12 +80,22 @@ class JunctionServiceProvider extends ServiceProvider
         Request::macro('getRelations', function () {
             $relations = $this->input('with');
 
-            foreach ($this->getAccessors() ?? [] as $accessor) {
+            $accessors = $this->getAccessors();
+
+            if (is_string($accessors)) {
+                $accessors = [ $accessors ];
+            }
+
+            foreach ($accessors ?? [] as $accessor) {
                 if (! Str::contains($accessor, '.')) {
                     continue;
                 }
 
                 $accessorRelation = Str::beforeLast($accessor, '.');
+
+                if (is_string($relations)) {
+                    $relations = [$relations];
+                }
 
                 if (! Arr::first($relations ?? [], fn ($relation) => Str::startsWith($relation, $accessorRelation))) {
                     $relations ??= [];

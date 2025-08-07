@@ -15,8 +15,12 @@ class Appends
      *
      * @throws ValidationException
      */
-    public static function validate(Controller $controller, array $appends)
+    public static function validate(Controller $controller, array | string $appends)
     {
+        if (is_string($appends)) {
+            $appends = [$appends];
+        }
+        
         $appends = collect($appends);
 
         if ($appends->isEmpty()) {
