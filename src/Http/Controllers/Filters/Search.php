@@ -53,7 +53,11 @@ class Search extends Filter
 
         foreach ($columns as $relationName => $relationColumns) {
             if (! is_array($relationColumns)) {
-                $query->orWhere($tableName . '.' . $relationName, $likeOperator, '%' . $searchValue . '%');
+                if(\Str::contains($searchValue, '%')){
+                    $query->orWhere($tableName . '.' . $relationName, $likeOperator, $searchValue);
+                } else {
+                    $query->orWhere($tableName . '.' . $relationName, $likeOperator, '%' . $searchValue . '%');
+                }
             } else {
                 $relation = Table::getRelation($query->getModel()::class, [$relationName]);
 
