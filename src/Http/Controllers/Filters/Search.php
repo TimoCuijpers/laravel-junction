@@ -55,7 +55,7 @@ class Search extends Filter
             if (! is_array($relationColumns)) {
                 if(\Str::contains($searchValue, '!')){
                     $searchValue = \Str::replaceFirst('!', '', $searchValue);
-                    $query->orWhereRaw("SOUNDEX(${tableName}.${relationName}) = SOUNDEX(?)", [$searchValue]);
+                    $query->orWhereRaw("SOUNDEX({$tableName}.{$relationName}) = SOUNDEX(?)", [$searchValue]);
                 } else {
                     $query->orWhere($tableName . '.' . $relationName, $likeOperator, '%' . $searchValue . '%');
                 }

@@ -34,8 +34,6 @@ class Wheres extends Filter
             }
         }
 
-        error_log(response()->json($wheres));
-
         foreach ($wheres as $where) {
             $column = $where['column'] ?? null;
             $operator = $where['operator'] ?? null;
