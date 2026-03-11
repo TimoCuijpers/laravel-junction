@@ -4,6 +4,15 @@
 - Added support for ordering by relationship columns in the Order filter (e.g., `brand.code`, `user.name`).
 - Order filter now uses LEFT JOIN approach for relationship ordering to preserve all records.
 
+## v0.4.5
+- Fixed bug where `Weap\Junction\Http\Controllers\Resources\BaseResource` would throw an error when the resource instance is null.
+
+## v0.4.4
+- Added support for relation extensions.
+
+## v0.4.3
+- Fixed a bug where nested relations with mutations would overwrite parent relation mutations in controllers.
+
 ## v0.4.2
 - Fixed a bug where relations which had mutations defined in a controller would always be loaded, even if they weren't requested.
 
