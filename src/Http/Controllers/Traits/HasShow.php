@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Weap\Junction\Http\Controllers\Filters\Count;
 use Weap\Junction\Http\Controllers\Filters\Relations;
 use Weap\Junction\Http\Controllers\Filters\Scopes;
+use Weap\Junction\Http\Controllers\Filters\Select;
 use Weap\Junction\Http\Controllers\Filters\WhereIn;
 use Weap\Junction\Http\Controllers\Filters\WhereNotIn;
 use Weap\Junction\Http\Controllers\Filters\Wheres;
@@ -37,6 +38,7 @@ trait HasShow
         $this->beforeShow($query);
 
         Relations::apply($this, $query);
+        Select::apply($this, $query);
         Scopes::apply($this, $query);
         Wheres::apply($this, $query);
         WhereIn::apply($this, $query);

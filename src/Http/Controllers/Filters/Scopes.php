@@ -21,9 +21,17 @@ class Scopes extends Filter
             return;
         }
 
-        $scopes = ScopesValidator::validate($controller, $scopes);
+        // Only apply scopes without a dot in their name to the main query.
+        // Scopes with dot-notation (e.g. "products.colors") are handled by the Relations filter.
+        $mainScopes = array_values(array_filter($scopes, fn ($scope) => ! str_contains($scope['name'], '.')));
 
-        foreach ($scopes as $scope) {
+        if (empty($mainScopes)) {
+            return;
+        }
+
+        $mainScopes = ScopesValidator::validate($controller, $mainScopes);
+
+        foreach ($mainScopes as $scope) {
             $scopeName = $scope['name'];
             $params = $scope['params'] ?? [];
             $query->$scopeName(...$params);

@@ -5,6 +5,7 @@ namespace Weap\Junction\Http\Controllers\Filters;
 use App\Events\DebugNotification;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
@@ -29,6 +30,8 @@ class Select extends Filter
 
         $selects = (array) $selects;
 
+        // Always include the primary key so hasMany and other relations can be loaded correctly.
+        $query->addSelect($query->getModel()->getTable() . '.id');
 
         foreach ($selects as $select) {
             self::traverse($query, $select, $selects);
@@ -37,7 +40,21 @@ class Select extends Filter
 
     protected static function traverse(Builder $query, string $column, array $columns): void
     {
+        // When a dotted column like "product.name" is selected, automatically add
+        // the FK (e.g. products_id) for that BelongsTo relation so it can be loaded.
         if (Str::contains($column, '.')) {
+            $relationName = Str::before($column, '.');
+
+            try {
+                $relation = Table::getRelation($query->getModel()::class, [$relationName]);
+
+                if ($relation instanceof BelongsTo) {
+                    $query->addSelect($query->getModel()->getTable() . '.' . $relation->getForeignKeyName());
+                }
+            } catch (\Throwable) {
+                // Relation does not exist on this model; skip silently.
+            }
+
             return;
         }
 
@@ -46,13 +63,28 @@ class Select extends Filter
         $potentialRelations = request()?->getRelations();
 
         if ($potentialRelations && count($potentialRelations) > 0) {
-            $potentialRelations = array_map(function ($relation) {
-                return Str::after($relation, '.');
-            }, $potentialRelations);
+            // Only process top-level (non-nested) relations. Nested relations like
+            // "project_lines.product" are not direct relations on the main model,
+            // so we take only the root segment and deduplicate.
+            $rootRelations = array_unique(array_map(
+                fn ($relation) => Str::before($relation, '.'),
+                $potentialRelations
+            ));
 
-            $tableName = Str::after(Table::getRelationTableName($query->getModel()::class, $potentialRelations), '.');
+            foreach ($rootRelations as $rootRelation) {
+                try {
+                    $relation = Table::getRelation($query->getModel()::class, [$rootRelation]);
 
-            $query->addSelect($query->getModel()->getTable() . '.' . $tableName.'_id');
+                    // Only BelongsTo has its FK on the main model's table.
+                    if (! ($relation instanceof BelongsTo)) {
+                        continue;
+                    }
+
+                    $query->addSelect($query->getModel()->getTable() . '.' . $relation->getForeignKeyName());
+                } catch (\Throwable) {
+                    // Relation does not exist on this model; skip silently.
+                }
+            }
         }
 
         // Directly on the main model (no relation)

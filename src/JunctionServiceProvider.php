@@ -106,6 +106,50 @@ class JunctionServiceProvider extends ServiceProvider
                 }
             }
 
+            // Auto-include relation paths from dot-notation scopes (e.g. "products.colors" → "products").
+            // This mirrors the accessor logic above so the user does not need to repeat
+            // the relation in both `with` and `scopes`.
+            $scopes = $this->input('scopes');
+
+            foreach ($scopes ?? [] as $scope) {
+                $scopeName = is_string($scope) ? $scope : ($scope['name'] ?? null);
+
+                if (! $scopeName || ! Str::contains($scopeName, '.')) {
+                    continue;
+                }
+
+                $scopeRelation = Str::beforeLast($scopeName, '.');
+
+                if (is_string($relations)) {
+                    $relations = [$relations];
+                }
+
+                if (! Arr::first($relations ?? [], fn ($relation) => Str::startsWith($relation, $scopeRelation))) {
+                    $relations ??= [];
+                    $relations[] = $scopeRelation;
+                }
+            }
+
+            // Auto-include relation paths from dot-notation select columns (e.g. "products.colors" → "products").
+            $selects = $this->input('select');
+
+            foreach ((array) ($selects ?? []) as $select) {
+                if (! Str::contains($select, '.')) {
+                    continue;
+                }
+
+                $selectRelation = Str::beforeLast($select, '.');
+
+                if (is_string($relations)) {
+                    $relations = [$relations];
+                }
+
+                if (! Arr::first($relations ?? [], fn ($relation) => Str::startsWith($relation, $selectRelation))) {
+                    $relations ??= [];
+                    $relations[] = $selectRelation;
+                }
+            }
+
             return $relations;
         });
     }
